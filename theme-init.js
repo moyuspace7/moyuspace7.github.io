@@ -3,8 +3,11 @@
   const key = 'moyu-theme';
   const valid = (value) => value === 'light' || value === 'dark';
   const root = document.documentElement;
+  const systemDark = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-color-scheme: dark)') : null;
   let activeTheme = 'light';
+  let sessionChoice = null;
   const readTheme = () => {
+    if (valid(sessionChoice)) return sessionChoice;
     try {
       const saved = localStorage.getItem(key);
       if (valid(saved)) return saved;
@@ -14,7 +17,13 @@
         return legacy;
       }
     } catch {}
+    // No saved choice yet: follow the visitor's system preference.
+    if (systemDark) return systemDark.matches ? 'dark' : 'light';
     return activeTheme;
+  };
+  const hasSavedChoice = () => {
+    if (valid(sessionChoice)) return true;
+    try { return valid(localStorage.getItem(key)); } catch { return false; }
   };
   const updateControls = () => {
     const dark = root.dataset.theme === 'dark';
@@ -36,11 +45,17 @@
     if (!(event.target instanceof Element) || !event.target.closest('[data-theme-toggle]')) return;
     const theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
     apply(theme);
-    try { localStorage.setItem(key, theme); } catch {}
+    // Keep this visit's manual choice even when browser storage is unavailable.
+    sessionChoice = theme;
+    try { localStorage.setItem(key, theme); sessionChoice = null; } catch {}
   });
   // Browser Back/Forward can restore a page without rerunning its head script.
   window.addEventListener('pageshow', () => apply(readTheme()));
   window.addEventListener('storage', (event) => {
     if (event.key === key || event.key === null) apply(readTheme());
+  });
+  // Only mirror live system changes while the visitor has not chosen a theme.
+  systemDark?.addEventListener('change', () => {
+    if (!hasSavedChoice()) apply(readTheme());
   });
 })();
