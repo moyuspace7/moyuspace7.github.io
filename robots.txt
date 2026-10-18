@@ -1,4 +1,15 @@
 User-agent: *
 Allow: /
+Disallow: /r/
+Disallow: /r$
+Disallow: /p/
+Disallow: /p$
+Disallow: /api/
+Disallow: /api$
+Disallow: /_reader
+Disallow: /manage
+Disallow: /signin-with-chatgpt
+Disallow: /signout-with-chatgpt
+Disallow: /callback
 
 Sitemap: https://moyuspace7.github.io/sitemap-index.xml
